@@ -1,0 +1,19 @@
+{
+    "name": "hb/basic-pokeapi",
+    "type": "project",
+    "license": "MIT",
+    "autoload": {
+        "psr-4": {
+            "Hb\\BasicPokeapi\\": "src/"
+        }
+    },
+    "authors": [
+        {
+            "name": "June",
+            "email": "rem-je42@hotmail.fr"
+        }
+    ],
+    "require": {
+        "symfony/http-client": "^5.3"
+    }
+}
