@@ -38,34 +38,37 @@ class Pokedex
         }else {
             $infosPokemon= $response->toArray();
             $pokemon=array_intersect_key($infosPokemon,array_flip(['base_experience','id','name','weight']));
-            // $baseExp = $infosPokemon['base_experience'];
-            // $id= $infosPokemon['id'];
-            // $name=$infosPokemon['name'];
-            // $weight=$infosPokemon['weight'];
             $pokemon['img']=$infosPokemon['sprites']['front_default'];
-
             return $pokemon;
-
-            // return [
-            //     'id' => $pokemon['id'],
-            //     'name' => $pokemon['name'],
-            //     'base_experience' => $pokemon['base_experience'],
-            //     'weight' => $pokemon['weight'],
-            //     'img' => $img
-            // ];
-
         }
+    }
 
+    public function getAllPokemon($nextPokemons = null, $pokemons=[]) : array {
+
+        if($nextPokemons==null){
+            $response = $this->client->request('GET', 'pokemon/');
+        }else{
+            $response = $this->client->request('GET', 'pokemon/'.$nextPokemons);
+        }
         
-
-
-
-        // return [
-        //     'name' => 'Pikachu',
-        //     'id' => 25,
-        //     'types' => [
-        //         'electric',
-        //     ],
-        // ];
+        if (200 !== $response->getStatusCode()) {
+            throw new \RuntimeException('Error from Pokeapi.co');
+        }else {
+            $allPokemon= $response->toArray();
+            foreach($allPokemon['results'] as $pokemon){            
+                $id = explode('/',$pokemon['url']);
+                $pokemons[]=[
+                    'id'=> $id[6],
+                    'name'=> $pokemon['name']
+                ];
+            }
+            
+            if(isset($allPokemon['next'])){
+                $next = explode('/',$allPokemon['next']);
+                return $this->getAllPokemon($next[6],$pokemons);
+            }else{
+                return $pokemons;
+            }  
+        }
     }
 }
