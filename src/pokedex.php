@@ -43,13 +43,10 @@ class Pokedex
         }
     }
 
-    public function getAllPokemon($nextPokemons = null, $pokemons=[]) : array {
-
-        if($nextPokemons==null){
-            $response = $this->client->request('GET', 'pokemon/');
-        }else{
-            $response = $this->client->request('GET', 'pokemon/'.$nextPokemons);
-        }
+    public function getAllPokemon($offset=0, $limit=50) : array {
+        
+        $pokemons=[];
+        $response = $this->client->request('GET', 'pokemon/?offset='.$offset.'&limit='.$limit);
         
         if (200 !== $response->getStatusCode()) {
             throw new \RuntimeException('Error from Pokeapi.co');
@@ -64,11 +61,27 @@ class Pokedex
             }
             
             if(isset($allPokemon['next'])){
-                $next = explode('/',$allPokemon['next']);
-                return $this->getAllPokemon($next[6],$pokemons);
-            }else{
-                return $pokemons;
-            }  
+                
+                if (!preg_match('/\?.*offset=([0-9]+).*limit=([0-9]+)|\?.*limit=([0-9]+).*offset=([0-9]+)/', $allPokemon['next'], $matches)) {
+                    throw new \RuntimeException('Cannot match offset on next page.');
+                }
+                // var_dump($matches);
+                // die();
+                $nextOffset = $matches[1];
+
+                // if (!preg_match('/\?.*limit=([0-9]+)/', $allPokemon['next'], $matches)) {
+                //     throw new \RuntimeException('Cannot match offset on next page.');
+                // }
+
+                $nextLimit = $matches[2];
+
+                $nextPokemons = $this->getAllPokemon($nextOffset,$nextLimit);
+                
+                $pokemons = array_merge($pokemons, $nextPokemons);
+            }
+            
+            return $pokemons;
+            
         }
     }
 }
